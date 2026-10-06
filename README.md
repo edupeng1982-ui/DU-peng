@@ -4,7 +4,7 @@ Enote 是一款完全离线的 Windows 实验记录与生产事项管理工具�
 
 ## 下载与安装
 
-请前往仓库的 [Releases](../../releases/latest) 页面，下载 `实验记录本-Enote-安装程序-1.5.2.exe`。
+请前往仓库的 [Releases](../../releases/latest) 页面，下载 `Enote-Setup-1.5.2.exe`。
 
 系统要求：64 位 Windows 10 或 Windows 11。
 
