@@ -1,0 +1,19 @@
+# Local data and test profiles
+.smoke-profile*/
+.browser-test-profile*/
+.runtime-test-profile*/
+
+# Personal imports and generated manifests
+*import-events*.json
+*image-manifest*.json
+*download-results*.json
+
+# User data and logs
+实验记录本/
+Todo清单本地版/
+*.log
+
+# Dependencies and build output
+node_modules/
+dist/
+build-tools/

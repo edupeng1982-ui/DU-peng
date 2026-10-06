@@ -1,0 +1,7 @@
+{
+  "name": "enote-lab-notebook",
+  "version": "1.5.2",
+  "private": true,
+  "description": "完全离线的实验记录本 Enote",
+  "main": "main.cjs"
+}

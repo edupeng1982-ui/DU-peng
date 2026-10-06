@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>实验记录本</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img class="brand-mark" src="assets/enote.png" alt="Enote" />
+          <div>
+            <div class="brand-title">实验记录本</div>
+            <div class="brand-subtitle">Enote · 完全离线</div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="事项筛选">
+          <button class="nav-item is-active" data-filter="today">
+            <span>今天</span><span class="nav-count" id="todayCount">0</span>
+          </button>
+          <button class="nav-item" data-filter="upcoming">
+            <span>未来</span><span class="nav-count" id="upcomingCount">0</span>
+          </button>
+          <button class="nav-item" data-filter="all">
+            <span>全部事项</span><span class="nav-count" id="allCount">0</span>
+          </button>
+          <button class="nav-item" data-filter="completed">
+            <span>已完成</span><span class="nav-count" id="completedCount">0</span>
+          </button>
+          <button class="nav-item gantt-nav-item" id="ganttNavButton">
+            <span>项目甘特图</span><span class="nav-count" id="projectCount">0</span>
+          </button>
+          <button class="nav-item report-nav-item" id="reportNavButton">
+            <span>生产报表</span><span class="nav-count" id="productionCount">0</span>
+          </button>
+          <button class="nav-item report-nav-item" id="salesTrendNavButton">
+            <span>客户销售趋势</span><span class="nav-count" id="salesCustomerCount">0</span>
+          </button>
+          <button class="nav-item report-nav-item" id="statementNavButton">
+            <span>客户对账单</span><span class="nav-count" id="statementCount">0</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <button class="text-button" id="exportButton">导出备份</button>
+          <button class="text-button" id="importButton">导入备份</button>
+          <p>数据只保存在这台电脑</p>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="toolbar">
+          <div>
+            <h1 id="viewTitle">今天</h1>
+            <p id="viewSubtitle"></p>
+          </div>
+          <div class="toolbar-actions">
+            <label class="search-box">
+              <span aria-hidden="true">⌕</span>
+              <input id="searchInput" type="search" placeholder="搜索事项或备注" />
+            </label>
+            <button class="primary-button" id="addButton">＋ 新建事项</button>
+          </div>
+        </header>
+
+        <section class="event-list" id="eventList" tabindex="0" aria-live="polite"></section>
+      </main>
+
+      <aside class="detail-panel" id="detailPanel" aria-label="事项详情">
+        <div class="empty-detail" id="emptyDetail">
+          <div class="empty-icon">⌬</div>
+          <h2>选择一个事项</h2>
+          <p>可以编辑内容，并粘贴、拖入或选择多张图片。</p>
+        </div>
+
+        <div class="detail-content is-hidden" id="detailContent">
+          <div class="detail-header">
+            <label class="complete-toggle" title="标记为完成">
+              <input id="completeInput" type="checkbox" />
+              <span></span>
+            </label>
+            <input id="titleInput" class="title-input" maxlength="120" placeholder="事项名称" />
+            <button class="delete-event-button" id="deleteEventButton" title="删除当前事件及其关联图片">删除事件</button>
+          </div>
+
+          <div class="field-grid">
+            <label class="field-label" for="dateInput">日期</label>
+            <input id="dateInput" class="field-control" type="date" />
+          </div>
+
+          <div class="field-grid">
+            <label class="field-label" for="categoryInput">标注</label>
+            <select id="categoryInput" class="field-control">
+              <option value="experiment">实验</option>
+              <option value="production">生产</option>
+            </select>
+          </div>
+
+          <div class="production-fields is-hidden" id="productionFields">
+            <div class="production-fields-title">生产信息</div>
+            <label class="production-field production-field-wide">
+              <span>客户名称</span>
+              <input id="customerInput" type="text" maxlength="120" placeholder="填写客户名称" />
+            </label>
+            <label class="production-field">
+              <span>单价（元）</span>
+              <input id="unitPriceInput" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" />
+            </label>
+            <label class="production-field">
+              <span>数量</span>
+              <input id="quantityInput" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0" />
+            </label>
+            <div class="production-total">
+              <span>金额</span>
+              <strong id="productionTotal">¥0.00</strong>
+            </div>
+          </div>
+
+          <label class="section-label" for="noteInput">备注</label>
+          <textarea id="noteInput" class="note-input" rows="5" placeholder="补充说明、地点、联系人……"></textarea>
+
+          <div class="images-heading">
+            <div>
+              <h3>相关图片 <span id="imageCount">0</span></h3>
+              <p>支持一次粘贴多张，最多 30 张；每张不超过 20 MB。</p>
+            </div>
+            <label class="secondary-button" for="imageInput">选择图片</label>
+            <input id="imageInput" type="file" accept="image/*" multiple hidden />
+          </div>
+
+          <div class="image-drop-zone" id="imageDropZone" tabindex="0">
+            <div class="image-grid" id="imageGrid"></div>
+            <div class="drop-hint" id="dropHint">
+              <strong>Ctrl+V 粘贴多张图片</strong>
+              <span>也可以拖入图片或点击“选择图片”</span>
+            </div>
+          </div>
+
+          <div class="save-state" id="saveState">已保存到本机</div>
+        </div>
+      </aside>
+
+      <section class="gantt-workspace is-hidden" id="ganttWorkspace" aria-label="项目甘特图">
+        <header class="gantt-toolbar">
+          <div>
+            <h1>项目甘特图</h1>
+            <p>把大项目拆成若干个可独立安排和完成的事件节点</p>
+          </div>
+          <button class="primary-button" id="addProjectButton">＋ 新建项目</button>
+        </header>
+
+        <div class="gantt-body">
+          <aside class="project-sidebar">
+            <div class="project-sidebar-title">项目列表</div>
+            <div class="project-list" id="projectList"></div>
+          </aside>
+
+          <div class="project-editor">
+            <div class="project-empty" id="emptyProject">
+              <div class="empty-icon">⌁</div>
+              <h2>选择或新建一个项目</h2>
+              <p>每个项目都可以设置多个事件节点和起止日期。</p>
+            </div>
+
+            <div class="project-content is-hidden" id="projectContent">
+              <div class="project-heading">
+                <input id="projectNameInput" class="project-name-input" maxlength="120" placeholder="项目名称" />
+                <button class="icon-button danger" id="deleteProjectButton" title="删除项目">⌫</button>
+              </div>
+              <textarea id="projectNoteInput" class="project-note-input" rows="2" placeholder="项目目标或说明（选填）"></textarea>
+
+              <div class="project-summary">
+                <span id="ganttRange">尚未设置日期</span>
+                <span id="ganttProgress">0 / 0 已完成</span>
+              </div>
+
+              <div class="gantt-section-heading">
+                <div>
+                  <h2>时间安排</h2>
+                  <p>横向滚动可查看较长周期</p>
+                </div>
+                <button class="secondary-button" id="addMilestoneButton">＋ 添加事件节点</button>
+              </div>
+
+              <div class="gantt-scroll" id="ganttScroll">
+                <div class="gantt-chart" id="ganttChart"></div>
+              </div>
+
+              <div class="milestone-heading">
+                <h2>事件节点</h2>
+                <span>修改后自动保存到本机</span>
+              </div>
+              <div class="milestone-list" id="milestoneList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="report-workspace is-hidden" id="reportWorkspace" aria-label="生产统计报表">
+        <header class="report-toolbar">
+          <div>
+            <h1>生产统计报表</h1>
+            <p>按事件日期统计标注为“生产”的记录</p>
+          </div>
+          <div class="report-toolbar-actions">
+            <select id="reportPeriodMode" class="field-control" aria-label="统计方式">
+              <option value="month">月度统计</option>
+              <option value="year">年度统计</option>
+            </select>
+            <input id="reportMonthInput" class="field-control" type="month" aria-label="统计月份" />
+            <select id="reportYearInput" class="field-control is-hidden" aria-label="统计年份"></select>
+            <button class="secondary-button" id="printReportButton">打印 / 另存 PDF</button>
+          </div>
+        </header>
+
+        <div class="report-content">
+          <div class="report-title-row">
+            <div>
+              <h2 id="reportTitle">月度生产报表</h2>
+              <p id="reportSubtitle"></p>
+            </div>
+            <span class="report-generated">本机实时统计</span>
+          </div>
+
+          <div class="report-summary">
+            <div class="summary-card">
+              <span>生产事件</span>
+              <strong id="reportEventTotal">0</strong>
+            </div>
+            <div class="summary-card">
+              <span>客户数量</span>
+              <strong id="reportCustomerTotal">0</strong>
+            </div>
+            <div class="summary-card">
+              <span>生产数量</span>
+              <strong id="reportQuantityTotal">0</strong>
+            </div>
+            <div class="summary-card summary-card-money">
+              <span>生产金额</span>
+              <strong id="reportAmountTotal">¥0.00</strong>
+            </div>
+          </div>
+
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead id="reportTableHead"></thead>
+              <tbody id="reportTableBody"></tbody>
+            </table>
+            <div class="report-empty is-hidden" id="reportEmpty">当前期间没有生产记录</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="statement-workspace is-hidden" id="statementWorkspace" aria-label="客户对账单">
+        <header class="statement-toolbar">
+          <div>
+            <h1>客户对账单</h1>
+            <p>每月30日结束后按客户自动生成；二月按当月最后一天</p>
+          </div>
+          <div class="statement-toolbar-actions">
+            <input id="statementMonthInput" class="field-control" type="month" aria-label="对账月份" />
+            <button class="secondary-button" id="generateStatementsButton">生成 / 更新本月</button>
+            <button class="secondary-button" id="printStatementButton">打印 / 另存 PDF</button>
+          </div>
+        </header>
+
+        <div class="statement-body">
+          <aside class="statement-list-panel">
+            <div class="statement-list-title">
+              <span>客户列表</span>
+              <span id="statementPeriodLabel"></span>
+            </div>
+            <div class="statement-warning is-hidden" id="statementWarning"></div>
+            <div class="statement-list" id="statementList"></div>
+          </aside>
+
+          <div class="statement-document-wrap">
+            <div class="statement-empty" id="statementEmpty">
+              <div class="empty-icon">¥</div>
+              <h2>当前月份暂无对账单</h2>
+              <p>到达生成日期后会自动生成，也可以点击“生成 / 更新本月”。</p>
+            </div>
+
+            <article class="statement-document is-hidden" id="statementDocument">
+              <div class="statement-document-header">
+                <div>
+                  <div class="statement-kicker">Enote · 客户对账单</div>
+                  <h2 id="statementTitle">客户对账单</h2>
+                  <p id="statementCustomer"></p>
+                </div>
+                <div class="statement-meta">
+                  <span id="statementNumber"></span>
+                  <span id="statementGeneratedAt"></span>
+                </div>
+              </div>
+
+              <div class="statement-summary">
+                <div><span>生产事件</span><strong id="statementEventTotal">0</strong></div>
+                <div><span>总数量</span><strong id="statementQuantityTotal">0</strong></div>
+                <div><span>应对账金额</span><strong id="statementAmountTotal">¥0.00</strong></div>
+              </div>
+
+              <table class="statement-table">
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>生产事件</th>
+                    <th class="report-number">单价（元）</th>
+                    <th class="report-number">数量</th>
+                    <th class="report-number">金额（元）</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody id="statementTableBody"></tbody>
+              </table>
+
+              <div class="statement-footer">
+                <span>客户确认：________________</span>
+                <span>制单确认：________________</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="sales-workspace is-hidden" id="salesWorkspace" aria-label="客户销售趋势">
+        <header class="sales-toolbar">
+          <div>
+            <h1>客户销售趋势</h1>
+            <p>销售额按生产事件的单价 × 数量计算</p>
+          </div>
+          <div class="sales-toolbar-actions">
+            <select id="salesTrendMode" class="field-control" aria-label="趋势类型">
+              <option value="monthly">月度销售趋势</option>
+              <option value="annual">年度销售趋势</option>
+            </select>
+            <select id="salesTrendYear" class="field-control" aria-label="统计年份"></select>
+            <select id="salesCustomerFilter" class="field-control" aria-label="客户筛选"></select>
+            <button class="secondary-button" id="printSalesTrendButton">打印 / 另存 PDF</button>
+          </div>
+        </header>
+
+        <div class="sales-content">
+          <div class="sales-title-row">
+            <div>
+              <h2 id="salesTrendTitle">客户月度销售额折线图</h2>
+              <p id="salesTrendSubtitle"></p>
+            </div>
+            <div class="sales-totals">
+              <span>当前范围客户 <strong id="salesTrendCustomers">0</strong></span>
+              <span>销售额合计 <strong id="salesTrendTotal">¥0.00</strong></span>
+            </div>
+          </div>
+
+          <div class="sales-chart-card">
+            <div class="sales-chart-legend" id="salesChartLegend"></div>
+            <div class="sales-chart-scroll">
+              <svg id="salesChart" class="sales-chart" viewBox="0 0 1000 420" role="img" aria-label="客户销售额折线图"></svg>
+              <div class="sales-chart-empty is-hidden" id="salesChartEmpty">当前范围没有填写客户名称的生产销售记录</div>
+            </div>
+          </div>
+
+          <div class="sales-table-wrap">
+            <table class="sales-table">
+              <thead id="salesTableHead"></thead>
+              <tbody id="salesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+    <div class="lightbox is-hidden" id="lightbox" role="dialog" aria-modal="true">
+      <button class="lightbox-close" id="lightboxClose" aria-label="关闭">×</button>
+      <img id="lightboxImage" alt="图片预览" />
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
